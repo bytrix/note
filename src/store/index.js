@@ -7,7 +7,7 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    notes: ['a']
+    notes: []
   },
   mutations: {
     GET_NOTES(state, payload) {
@@ -24,16 +24,30 @@ export default new Vuex.Store({
         context.commit('GET_NOTES', data.data)
       })
     },
-    addNote(context) {
-      axios.post('/api/notes').then(({data}) => {
-        console.log('add note', data)
+    addNote(context, {payload}) {
+      axios.post('/api/notes', payload).then(({data}) => {
         context.commit('ADD_NOTE', data)
+      })
+    },
+    deleteNote(context, {payload}) {
+      const { _id } = payload
+      axios.delete(`/api/notes/${_id}`).then(({data}) => {
+        context.commit('DELETE_NOTE', data)
       })
     }
   },
   getters: {
     notes(state) {
-      return state.notes
+      const notes = state.notes
+      if(notes instanceof Array) {
+        return notes
+      } else if(notes instanceof Object && notes._id) {
+        return [notes]
+      } else if(notes instanceof Object && !notes._id) {
+        return notes.children
+      } else {
+        return []
+      }
     }
   },
   modules: {

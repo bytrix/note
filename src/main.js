@@ -5,7 +5,7 @@ import router from './router'
 import store from './store'
 import MantDesign from 'mant-design'
 import 'mant-design/lib/mant.css'
-import 'mant-design/dist/css/app.6c4d7cc1.css'
+import 'mant-design/dist/css/app.34245d12.css'
 
 Vue.config.productionTip = false
 Vue.use(MantDesign)

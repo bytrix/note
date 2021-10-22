@@ -1,82 +1,79 @@
 <template>
   <div id="app">
-    <MantModal :width="100" :visible="showContactModal" @close="showContactModal = false">
+    <MantModal width="400px" :visible="showContactModal" @close="showContactModal = false">
       <img style="display: block; margin: 0 auto;" src="https://qr.api.cli.im/newqr/create?data=%25E6%25B5%258B&level=H&transparent=false&bgcolor=%23FFFFFF&forecolor=%23000000&blockpixel=12&marginblock=1&logourl=&logoshape=no&size=260&kid=cliim&key=751a1a513a90cab6c2bd6269c6260d67" />
-      <template>
-      <div slot="footer">s</div>
-      </template>
+      <template slot="footer"><MantIcon :icon="['fal', 'envelope']" style="padding: 3px 9px 3px 3px"/>wengzhijie@126.com</template>
     </MantModal>
     <MantCard class="header">
       <h1>Jack's notes</h1>
       <div style="flex: 1" />
-      <!-- <MantDropdown text="kk">
-        <MantDropdownItem text="a" />
-      </MantDropdown> -->
-      <MantButton type="link" :icon="['fal', 'phone']" @click="showContactModal = true">联系我</MantButton>
-      <MantButton type="primary" :icon="['fal', 'plus']" @click="newNote">新建笔记</MantButton>
+      <MantButton type="link" :icon="['fab', 'weixin']" @click="showContactModal = true" plain circle></MantButton>
+      <MantButton type="primary" :icon="['fal', 'plus']" @click="onNewNote">新建笔记</MantButton>
     </MantCard>
     <MantEditableModal
       :visible="showNoteModal"
-      :title="note.title"
+      :title="eval(`this.${genericFormData['C']}`).title"
       :maskClosable="false"
+      @change="onNoteChange"
       @close="onClose"
     >
       {{note.content}}
-      <!-- <template> -->
-        <div slot="footer">a</div>
-      <!-- </template> -->
+      <div slot="footer">
+        <MantButton type="primary">保存</MantButton>
+      </div>
     </MantEditableModal>
-    <MantRow>
-      <MantCol :flex="1">
-        <MantCard>
+    <MantRow :gutter="[0, 14]">
+      <MantCol :flex="2">
           <MantTree
-            :data="notes.children"
+            :data="notes"
             v-on="{
               expand: onItemClick,
               add: onAdd
             }"
+            style="padding: 12px !important"
+            :properties="{
+              id: '_id'
+            }"
           >
-            <template slot="right">
+            <template slot-scope="{item}">
+              <MantDropdown text="more" :trigger="['click']" style="display: inline-block; padding: 0px">
+                <MantDropdownItem @click="onItemDelete(item)" text="delete"/>
+              </MantDropdown>
               <MantButton
                 :icon="['fal', 'plus']"
                 size="small"
                 circle
-                @click="onItemClick"
+                style="margin-right: 0px"
+                @click="onItemAdd(item)"
               />
             </template>
           </MantTree>
-        </MantCard>
       </MantCol>
       <MantCol :flex="4">
         <MantCard :title="note.title">
-          {{note.content}}
+          <div v-html="marked(note.content || '')" />
         </MantCard>
       </MantCol>
-      <!-- <MantCol :flex="2">
-        <MantCard>
-          a
-        </MantCard>
-      </MantCol> -->
     </MantRow>
-    <!-- <MantButton>aa</MantButton>
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/> -->
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import MantDesign from 'mant-design'
-console.log('MantDesign', MantDesign.install)
+import marked from 'marked'
 export default {
   data() {
     return {
       showNoteModal: false,
       showContactModal: false,
       note: {},
+      newNote: {},
+      genericFormData: {
+        'C': 'newNote',
+        'R': 'note',
+        'U': '',
+        'D': ''
+      }
     }
   },
   mounted() {
@@ -88,30 +85,53 @@ export default {
     ...mapGetters(['notes'])
   },
   methods: {
+    marked,
+    eval(x) {
+      return eval(x)
+    },
+    onItemDelete(item) {
+      this.$store.dispatch({
+        type: "deleteNote",
+        payload: item
+      }).then(() => {
+        this.$store.dispatch({
+          type: "getNotes"
+        })
+      })
+    },
     onAdd(item) {
-      console.log('onadd', item)
       this.showNoteModal = true
       this.note = item
     },
     onItemClick(item) {
-      console.log('item', item)
       if(!item.children) {
         this.note = item
       }
-      // this.showNoteModal = true
     },
-    newNote() {
+    onItemAdd(item) {
+      this.showNoteModal = true
+      this.newNote.parent_id = item._id
+    },
+    onNewNote() {
       this.showNoteModal = true
     },
     onClose() {
-      console.log('on close', this.note, this.note.title)
-      if(this.note.title) {
+      if(this.newNote.title) {
         this.$store.dispatch({
           type: "addNote",
-          payload: this.note
+          payload: this.newNote
+        }).then(() => {
+          this.$store.dispatch({
+            type: "getNotes"
+          })
+          this.newNote = {}
         })
       }
       this.showNoteModal = false
+    },
+    onNoteChange(note) {
+      this.newNote.title = note.title
+      this.newNote.content = note.content
     }
   }
 }
@@ -150,9 +170,6 @@ h1 {
   margin-top: 0px !important;
 }
 .header {
-  // background-color: $block-bg-color;
-  // padding: 12px;
-  // display: flex;
   .non-footer {
     display: flex;
     h1 {
@@ -164,13 +181,10 @@ h1 {
   padding: 0px !important;
 }
 body {
-  // margin: 0px;
   margin: 22px;
 }
 
 #nav {
-  // padding: 30px;
-
   a {
     font-weight: bold;
     color: #2c3e50;
