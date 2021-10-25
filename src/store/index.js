@@ -5,6 +5,9 @@ import FlatToNested from 'flat-to-nested'
 
 Vue.use(Vuex)
 
+// const host = 'https://blog-api-2g8nea5tcfdeadd4-1304508799.ap-shanghai.app.tcloudbase.com'
+const host = ''
+
 export default new Vuex.Store({
   state: {
     notes: []
@@ -20,18 +23,18 @@ export default new Vuex.Store({
   },
   actions: {
     getNotes(context) {
-      axios.get('/api/notes').then(({data}) => {
+      axios.get(`${host}/api/notes`).then(({data}) => {
         context.commit('GET_NOTES', data.data)
       })
     },
     addNote(context, {payload}) {
-      axios.post('/api/notes', payload).then(({data}) => {
+      return axios.post(`${host}/api/notes`, payload).then(({data}) => {
         context.commit('ADD_NOTE', data)
       })
     },
     deleteNote(context, {payload}) {
       const { _id } = payload
-      axios.delete(`/api/notes/${_id}`).then(({data}) => {
+      return axios.delete(`${host}/api/notes/${_id}`).then(({data}) => {
         context.commit('DELETE_NOTE', data)
       })
     }
