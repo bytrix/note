@@ -1,4 +1,7 @@
+// const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+
 module.exports = {
+    productionSourceMap: true,
     devServer: {
         proxy: {
             '/api': {
@@ -9,5 +12,10 @@ module.exports = {
                 }
             }
         }
-    }
+    },
+    // configureWebpack: {
+    //     plugins: [
+    //         new BundleAnalyzerPlugin()
+    //     ]
+    // }
 }

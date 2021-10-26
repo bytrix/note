@@ -10,21 +10,33 @@ const host = ''
 
 export default new Vuex.Store({
   state: {
-    notes: []
+    notes: [],
+    note: {}
   },
   mutations: {
     GET_NOTES(state, payload) {
-      const flatToNested = new FlatToNested({
-        id: '_id',
-        parent: 'parent_id',
-      })
-      state.notes = flatToNested.convert(payload)
+      state.notes = payload
+    },
+    GET_NOTE(state, payload) {
+      if(!payload) return
+      const { data } = payload
+      if(data.length === 1) {
+        state.note = data[0]
+      } else {
+        state.note = {}
+      }
     }
   },
   actions: {
     getNotes(context) {
       axios.get(`${host}/api/notes`).then(({data}) => {
         context.commit('GET_NOTES', data.data)
+      })
+    },
+    getNote(context, {payload}) {
+      const { _id } = payload
+      axios.get(`${host}/api/notes/${_id}`).then(({data}) => {
+        context.commit('GET_NOTE', data)
       })
     },
     addNote(context, {payload}) {
@@ -41,7 +53,11 @@ export default new Vuex.Store({
   },
   getters: {
     notes(state) {
-      const notes = state.notes
+      const flatToNested = new FlatToNested({
+        id: '_id',
+        parent: 'parent_id',
+      })
+      const notes = flatToNested.convert(state.notes)
       if(notes instanceof Array) {
         return notes
       } else if(notes instanceof Object && notes._id) {
@@ -51,6 +67,9 @@ export default new Vuex.Store({
       } else {
         return []
       }
+    },
+    note(state) {
+      return state.note
     }
   },
   modules: {

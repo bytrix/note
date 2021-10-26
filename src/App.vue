@@ -48,7 +48,7 @@
               expand: onItemClick,
               add: onAdd
             }"
-            style="padding: 12px !important"
+            style="padding: 12px !important; border-radius: 18px"
             :properties="{
               id: '_id'
             }"
@@ -69,17 +69,7 @@
           </MantTree>
       </MantCol>
       <MantCol :flex="1" style="width: 0px">
-        <MantCard>
-          <template slot="header">
-            <div>
-              <div class="title">{{note.title}}</div>
-              <div class="create_time">{{note.create_time}}</div>
-            </div>
-          </template>
-          <!-- <div v-html="marked(note.content || '')" /> -->
-          <!-- <vue-mathjax :formula="note.content"></vue-mathjax> -->
-          <markdown-it-vue class="md-body" :content="note.content || ''" />
-        </MantCard>
+        <router-view />
       </MantCol>
     </MantRow>
     </MantSpin>
@@ -88,7 +78,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import marked from 'marked'
+// import marked from 'marked'
 export default {
   data() {
     return {
@@ -105,20 +95,20 @@ export default {
       }
     }
   },
-  mounted() {
+  beforeCreate() {
     this.$store.dispatch({
       type: "getNotes"
     }).then(() => {
       setTimeout(() => {
         this.loading = false
-      }, 700);
+      }, 1000);
     })
   },
   computed: {
     ...mapGetters(['notes'])
   },
   methods: {
-    marked,
+    // marked,
     eval(x) {
       return eval(x)
     },
@@ -139,6 +129,7 @@ export default {
     onItemClick(item) {
       if(!item.children) {
         this.note = item
+        this.$router.push(`/notes/${item._id}`)
       }
     },
     onItemAdd(item) {
@@ -163,10 +154,12 @@ export default {
       this.showNoteModal = false
     },
     onNoteChange(note) {
+      console.log('on note change', note)
       // this.newNote.title = note.title
-      console.log(eval(`this.${this.genericFormData['C']}`))
-      eval(`this.${this.genericFormData['C']}`).title = note.title
-      this.newNote.content = note.content
+      // console.log(eval(`this.${this.genericFormData['C']}`))
+      // eval(`this.${this.genericFormData['C']}`).title = note.title
+      // this.newNote.content = note.content
+      this.newNote = note
     }
   }
 }
@@ -230,8 +223,15 @@ h1 {
     background-color: $block-bg-color-secondary;
     border-color: $border-color !important;
   }
-  ul, a, p {
+  ul, p {
     color: $text-color !important;
+  }
+  a {
+    color: $primary-color !important;
+    transition: $duration;
+  }
+  a:hover {
+    text-decoration: underline !important;
   }
   .katex {
     color: #fff;
